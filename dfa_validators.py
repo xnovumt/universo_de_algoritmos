@@ -208,5 +208,129 @@ class CreditCardDFA:
         # Si todas las validaciones preliminares y semánticas pasan, se pasa la cadena
         # al AFD para la validación de la secuencia exacta de transiciones.
         return self.dfa.validate(input_string)
+# Implementación específica de un AFD para validar la CURP de México
+# Cumple con el requisito 2 del proyecto: "CURP de México".
+class CURPDFA:
+    def _init_(self):
+        """
+        Inicializa el AFD diseñado para validar el formato de la CURP de México.
+        
+        El formato esperado es: AAAAmmddHXXCCCNNDV (18 caracteres)
+        - AAAA: 4 letras iniciales (mayúsculas)
+        - mmdd: 6 dígitos de fecha de nacimiento (Año, Mes, Día)
+        - H: 1 letra para sexo (H o M)
+        - XX: 2 letras para estado (código de entidad federativa)
+        - CCC: 3 letras internas (primeras consonantes internas del nombre)
+        - NN: 2 caracteres para homoclave (dígitos o letras)
+        - DV: 1 dígito verificador
+        """
+        # Definición de estados: Necesitamos 18 estados (S0 a S17) para procesar cada uno de los 18 caracteres de la CURP,
+        # más un estado S18 que es el estado de aceptación final. También se incluye el estado de error 'E'.
+        states = {f'S{i}' for i in range(19)} | {'E'} 
+        # Alfabeto permitido para la CURP: todas las letras mayúsculas del abecedario y todos los dígitos (0-9).
+        alphabet = set('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+        transitions = {} # Se inicializa un diccionario vacío para definir las transiciones.
 
+        # --- Definición de transiciones por secciones del formato de la CURP ---
+
+        # 1. Primeras 4 letras (AAAA - Apellido Paterno, Apellido Materno, Nombre) S0 -> S4
+        for i in range(4): # Estados S0, S1, S2, S3
+            for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ': # Para cada letra mayúscula
+                transitions[(f'S{i}', letter)] = f'S{i+1}' # Transiciona al siguiente estado.
+
+        # 2. Fecha de nacimiento (YYMMDD - Año, Mes, Día) S4 -> S10 (consume 6 dígitos)
+        for i in range(4, 10): # Estados S4, S5, S6, S7, S8, S9
+            for digit in '0123456789': # Para cada dígito
+                transitions[(f'S{i}', digit)] = f'S{i+1}' # Transiciona al siguiente estado.
+
+        # 3. Sexo (H o M) S10 -> S11 (consume 1 carácter)
+        # Este estado solo acepta 'H' (Hombre) o 'M' (Mujer).
+        transitions[('S10', 'H')] = 'S11'
+        transitions[('S10', 'M')] = 'S11'
+        
+        # 4. Entidad Federativa (XX - 2 letras) S11 -> S13 (consume 2 caracteres)
+        # Las dos letras representan el código de la entidad federativa.
+        for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            transitions[('S11', letter)] = 'S12' # Primer carácter de la entidad.
+            transitions[('S12', letter)] = 'S13' # Segundo carácter de la entidad.
+
+        # 5. Consonantes Internas del Nombre (CCC - 3 letras) S13 -> S16 (consume 3 caracteres)
+        # Estas son las primeras consonantes internas del apellido paterno, materno y nombre.
+        for i in range(13, 16): # Estados S13, S14, S15
+            for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                transitions[(f'S{i}', letter)] = f'S{i+1}'
+
+        # 6. Homoclave + Dígito Verificador (NN + DV - 2 caracteres) S16 -> S18 (consume 2 caracteres)
+        # La homoclave puede ser dígito o letra, y el dígito verificador es un dígito.
+        # Aquí se aceptan ambos para el penúltimo y último carácter del formato.
+        for char_val in '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            transitions[('S16', char_val)] = 'S17' # Primer carácter de los dos finales (Homoclave).
+            transitions[('S17', char_val)] = 'S18' # Segundo carácter de los dos finales (Homoclave o Dígito Verificador).
+
+        # Llenar transiciones al estado de error 'E'
+        # Cualquier combinación de estado/carácter no definida explícitamente llevará a 'E'.
+        for state in states:
+            for char in alphabet:
+                if (state, char) not in transitions:
+                    transitions[(state, char)] = 'E'
+        # Una vez en el estado 'E', cualquier caracter lo mantiene en 'E'.
+        for c in alphabet:
+            transitions[('E', c)] = 'E'
+
+        # Inicializa una instancia de la clase base DFA con la configuración específica de la CURP.
+        # El estado final de aceptación para una CURP de 18 caracteres es S18.
+        self.dfa = DFA(states, alphabet, transitions, 'S0', {'S18'}) 
+
+    def validate(self, input_string: str) -> Tuple[bool, str, int]:
+        """
+        Valida una cadena de CURP.
+        
+        Realiza una validación preliminar de longitud y luego la validación estructural
+        completa utilizando el AFD (self.dfa.validate).
+        """
+        # Validación preliminar de longitud:
+        # La CURP de México debe tener exactamente 18 caracteres. Esta es una verificación rápida
+        # antes de pasar la cadena al procesamiento más detallado del AFD.
+        if len(input_string) != 18:
+            return False, "Longitud inválida: debe tener 18 caracteres", 0
+        
+        # Si la longitud es correcta, se procede con la validación estructural del AFD.
+        # El AFD verificará si la secuencia de caracteres sigue las reglas de transición definidas.
+        return self.dfa.validate(input_string)
+
+# Función para procesar un archivo de texto y validar cada línea
+# Esto cumple con el requisito del proyecto de "leer un archivo.txt con varias cadenas".
+def process_file(filename: str, validator: object, validator_name: str):
+    """
+    Lee un archivo de texto línea por línea y aplica una función de validación a cada línea.
+    Imprime el resultado de la validación (válido/inválido) y detalles del error si aplica.
+
+    Parámetros:
+    - filename (str): La ruta al archivo de texto a procesar (ej. 'credit_cards.txt', 'curps.txt').
+    - validator (object): Una instancia de una clase validadora (ej. CreditCardDFA, CURPDFA).
+                          Esta instancia debe tener un método validate que retorne (bool, str, int).
+    - validator_name (str): Un nombre descriptivo para el tipo de validación que se está realizando
+                            (ej. "Credit Card", "CURP"), usado en la salida por consola.
+    """
+    try:
+        # Abre el archivo en modo lectura ('r') con codificación UTF-8.
+        # El bloque with asegura que el archivo se cierre automáticamente.
+        with open(filename, 'r', encoding='utf-8') as file:
+            # Itera sobre cada línea del archivo. enumerate añade un contador de línea (i),
+            # que comienza en 1 para que coincida con la numeración común de archivos.
+            for i, line in enumerate(file, 1): 
+                line = line.strip() # strip() elimina cualquier espacio en blanco (incluyendo saltos de línea) del inicio y final de la línea.
+                if line: # Procesa la línea solo si no está vacía después de strip().
+                    # Llama al método validate del validador proporcionado.
+                    is_valid, error_msg, error_pos = validator.validate(line)
+                    if is_valid:
+                        print(f"{validator_name} - Línea {i}: '{line}' es válida")
+                    else:
+                        # En caso de error, imprime el número de línea, la posición del error y el mensaje de error.
+                        # Esto cumple con el requisito del proyecto de "mostrar el número de línea, el carácter donde falla, y la causa del error".
+                        print(f"{validator_name} - Línea {i}: Error en posición {error_pos}: {error_msg}")
+    except FileNotFoundError: # Maneja la excepción si el archivo especificado no existe.
+        print(f"Error: El archivo '{filename}' no se encontró")
+    except Exception as e: # Captura cualquier otra excepción inesperada durante el procesamiento del archivo.
+        print(f"Error al procesar el archivo: {e}")
 
