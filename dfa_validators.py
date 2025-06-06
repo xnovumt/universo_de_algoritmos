@@ -331,6 +331,6 @@ def process_file(filename: str, validator: object, validator_name: str):
                         print(f"{validator_name} - Línea {i}: Error en posición {error_pos}: {error_msg}")
     except FileNotFoundError: # Maneja la excepción si el archivo especificado no existe.
         print(f"Error: El archivo '{filename}' no se encontró")
-    except Exception as e: # Captura cualquier otra excepción inesperada durante el procesamiento del archivo.
+    except Exception as e: # Captura cualquier otra excepción inesperada durante el procesamiento del archivo..
         print(f"Error al procesar el archivo: {e}")
 
