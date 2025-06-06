@@ -5,4 +5,4 @@ main.py
 main_dfa.py
 api.py
 front
-.gitignore
+gitignore
