@@ -1,0 +1,23 @@
+/* src/assets/main.css */
+
+@import "tailwindcss";
+
+/* Define tus colores personalizados como variables CSS globales */
+:root {
+  --color-background-blue: 65, 105, 225; /* RGB values */
+  --color-complementary-orange: 240, 160, 80;
+  --color-heading-blue: 20, 50, 150;
+  --color-vue-green: #42b983; /* Hex value */
+  --color-vue-green-dark: #36a172; /* Hex value */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Avenir, Helvetica, Arial, sans-serif; /* Puedes dejar esta línea o quitarla si Tailwind cubre todo */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Si tienes alguna clase global que no sea de Tailwind, la pondrías aquí.
+   Pero idealmente, todo el styling de componentes individuales debe ser con clases de Tailwind. */
