@@ -1,0 +1,47 @@
+{
+  "nombre": "Mapa de Prueba Pequeño",
+  "matriz": {
+    "filas": 7,
+    "columnas": 7
+  },
+  "origen": [0, 0],
+  "destino": [6, 6],
+  "cargaInicial": 50,
+  "matrizInicial": [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 10, 1, 10, 1, 1],
+    [1, 1, 1, 1, 1, 10, 1],
+    [1, 10, 1, 1, 1, 1, 1],
+    [1, 1, 1, 10, 1, 1, 1],
+    [1, 10, 1, 1, 1, 10, 1],
+    [1, 1, 1, 1, 1, 1, 1]
+  ],
+  "agujerosNegros": [
+    [1, 2],
+    [3, 1],
+    [4, 3],
+    [5, 5]
+  ],
+  "estrellasGigantes": [
+    [2, 5] 
+  ],
+  "agujerosGusano": [
+    {
+      "entrada": [0, 3],
+      "salida": [3, 4],
+      "costo": 0
+    }
+  ],
+  "zonasRecarga": [
+    {
+      "posicion": [5, 1],
+      "factorMultiplicador": 1.5
+    }
+  ],
+  "celdasCargaRequerida": [
+    {
+      "coordenada": [2, 1],
+      "cargaMinima": 10
+    }
+  ]
+}
